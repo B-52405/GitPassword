@@ -9,7 +9,7 @@ const banner = await fetch("./static/banner.json")
 createApp({
     data() {
         return {
-            auth: "",
+            token: "",
             octokit: undefined,
             owner: "unknown",
             repo: "GitPasswordVault",
@@ -55,10 +55,10 @@ createApp({
                     visible: false,
                     record: false
                 },
-                AUTH: { 
-                    id: "auth", 
+                TOKEN: { 
+                    id: "token", 
                     handler: undefined,
-                    header: "auth: ",
+                    header: "token: ",
                     visible: false,
                     record: false
                 },
@@ -270,7 +270,7 @@ createApp({
             }
             else if (this.command_equals(command.command, this.commands.INIT)){
                 this.console_log(this.banner_yielder([" "], false))
-                this.command_state = this.command_states.AUTH
+                this.command_state = this.command_states.TOKEN
             }
             else if (this.command_equals(command.command, this.commands.LOGIN)) {
                 this.console_log(this.banner_yielder([" "], false))
@@ -280,13 +280,13 @@ createApp({
                 this.console_log(this.banner_yielder(banner["warning"]))
             }
         },
-        state_auth_handler(command) {
+        state_token_handler(command) {
             if (!this.assert_param_count(command.param_count, 0)) {
                 return
             }
             else {
-                this.auth = command.command
-                this.octokit = new Octokit({ auth: this.auth })
+                this.token = command.command
+                this.octokit = new Octokit({ auth: this.token })
                 this.console_log((async function* (app) {
                     yield " "
                     yield "    Authenticating ..."
@@ -294,9 +294,9 @@ createApp({
                         const login_response = await app.octokit.rest.users.getAuthenticated()
                         app.owner = login_response.data.login
                     }catch(error){
-                        app.auth = ""
+                        app.token = ""
                         app.octokit = undefined
-                        yield "    Auth incorrect."
+                        yield "    Token incorrect."
                         yield " "
                         return
                     }                   
@@ -313,7 +313,7 @@ createApp({
                             repo: app.repo,
                             path: app.path,
                             message: "Create PasswordVault",
-                            content: btoa(encrypt("{}",app.auth)),
+                            content: btoa(encrypt("{}",app.token)),
                         })
                         await app.octokit.rest.repos.createOrUpdateFileContents({
                             owner: app.owner,
@@ -331,9 +331,9 @@ createApp({
                             repo: app.repo,
                             path: app.path
                         })
-                        const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.auth)
+                        const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.token)
                         if(!success){
-                            app.auth = ""
+                            app.token = ""
                             app.owner = "unknown"
                             app.octokit = undefined
                             yield "    Error: Data corruption."
@@ -353,11 +353,11 @@ createApp({
                 return
             }
             const userinfo = {
-                auth: this.auth
+                token: this.token
             }
             const encrypted_userinfo = encrypt(JSON.stringify(userinfo), command.command)
             Cookies.set("userinfo", encrypted_userinfo, { expires: Infinity })
-            this.auth = ""
+            this.token = ""
             this.owner = "unknown"
             this.octokit = undefined
 
@@ -375,8 +375,8 @@ createApp({
                 return
             }
             const userinfo = JSON.parse(decrypted_text)
-            this.auth = userinfo.auth
-            this.octokit = new Octokit({ auth: this.auth })
+            this.token = userinfo.token
+            this.octokit = new Octokit({ auth: this.token })
             this.console_log((async function* (app) {
                 yield " "
                 yield "    Logging in ..."
@@ -389,7 +389,7 @@ createApp({
                     repo: app.repo,
                     path: app.path
                 })
-                const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.auth)
+                const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.token)
                 if(!success){
                     yield "    Error: Data corruption."
                     yield "    Please reinitialize, all data will NOT be retained."
@@ -487,7 +487,7 @@ createApp({
                     repo: app.repo,
                     path: app.path,
                     message: "Update PasswordVault",
-                    content: btoa(encrypt(JSON.stringify(app.password_data), app.auth)),
+                    content: btoa(encrypt(JSON.stringify(app.password_data), app.token)),
                     sha: app.sha,
                 })
                 yield "    Snycing hash value ..."
