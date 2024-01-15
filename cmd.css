@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: black;
+}
+
+p {
+    padding: 0;
+    margin: 0;
+    display: inline;
+    white-space: pre;
+}
+
+.command_font {
+    font-family: 'Courier New', monospace;
+    font-size: large;
+}
+
+#console_window {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: black;
+    color: white;
+    padding: 10px;
+    box-sizing: border-box;
+    white-space: pre;
+    user-select: text;
+    visibility: hidden;
+}
+
+#text_measure {
+    position: absolute;
+    /* top: -9999px;
+    left: -9999px; */
+    visibility: hidden;
+    white-space: nowrap;
+}
+
+#command_line {
+    position: absolute;
+    left: -9999px;
+}
+
+.blinking-cursor::after {
+    content: ' ';
+    display: inline-block;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        background-color: white;
+    }
+
+    50% {
+        background-color: transparent;
+    }
+}

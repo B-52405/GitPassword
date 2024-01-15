@@ -1,0 +1,47 @@
+{
+    "banner": [
+        " ██████╗ ██╗████████╗██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗ ",
+        "██╔════╝ ██║╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██║    ██║██╔═══██╗██╔══██╗██╔══██╗",
+        "██║  ███╗██║   ██║   ██████╔╝███████║███████╗███████╗██║ █╗ ██║██║   ██║██████╔╝██║  ██║",
+        "██║   ██║██║   ██║   ██╔═══╝ ██╔══██║╚════██║╚════██║██║███╗██║██║   ██║██╔══██╗██║  ██║",
+        "╚██████╔╝██║   ██║   ██║     ██║  ██║███████║███████║╚███╔███╔╝╚██████╔╝██║  ██║██████╔╝",
+        " ╚═════╝ ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ",
+        " ",
+        "    Welcome to GitPassword. ",
+        "    Usage:",
+        "        init    -    Initialize a vault or connect to an existing vault.",
+        "        login   -    You can only login after initialization.",
+        "        help    -    For assistance.",
+        " "
+    ],
+    "help": [
+        "    Usage:",
+        "        --- BEFORE LOGIN ---",
+        "        init    -    Initialize to create a github repository as a vault or connect to an existing vault.",
+        "        login   -    You can only login after initialization.",
+        " ",
+        "        --- AFTER LOGIN ---",
+        "        all     -    Show all records.",
+        "        add     -    Create a new password record.",
+        "        delete <NAME>    -    Delete a record.",
+        "        search <NAME>    -    search using a record name or a portion of the name.",
+        "        exit    -    Log out.",
+        " "
+    ],
+    "init_done": [
+        "    All done. Login and enjoy GitPassword."
+    ],
+    "warning": [
+        "    Warning: No such command.",
+        "    Try 'help' for assistance."
+    ],
+    "warning_incorrect_parameter_number": [
+        "    Warning: Incorrect number of parameters."
+    ],
+    "warning_no_such_password": [
+        "    Warning: No such password."
+    ],
+    "warning_main_password_incorrect": [
+        "    Warning: Main password incorrect."
+    ]
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>GitPassword</title>
+    <link rel="icon" href="./static/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="./cmd.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div id="console_window" ref="console_window" class="command_font">
+            <div v-for="line in log_lines">
+                <div v-if="typeof line == 'string'">
+                    <p>{{line}}</p>
+                </div>
+                <div v-else>
+                    <p>{{"    name: " + line.name + "; username: " + line.username + " "}}</p>
+                    <p @click="copy(line.username)">[COPY]</p>
+                    <p>{{"; password: " + line.hidden_password + " "}}</p>
+                    <p @click="copy(line.password)">[COPY]</p>
+                    <p>.</p>
+                </div>
+            </div>
+            <div v-for="(line, index) in command_lines" v-bind:style="get_command_line_style()"
+                v-bind:class="{ 'blinking-cursor': index == command_lines.length - 1}">
+                {{line}}
+            </div>
+            <div id="copy_button"></div>
+            <div id="text_measure" ref="text_measure"></div>
+            <input id="command_line" type="text" v-model="command" ref="command_line">
+        </div>
+    </div>
+
+    <script type="module" src="./scripts/console_window.mjs"></script>
+</body>
+
+</html>
