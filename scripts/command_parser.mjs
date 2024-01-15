@@ -1,8 +1,8 @@
-class Command{
-    constructor(command){
+class Command {
+    constructor(command) {
         const command_pieces = command.split(/\s+/).filter(Boolean);
         this.is_empty = command_pieces.length == 0
-        if(this.is_empty){
+        if (this.is_empty) {
             return
         }
         this.command = command_pieces[0]
@@ -11,6 +11,6 @@ class Command{
     }
 }
 
-export{
+export {
     Command
 }

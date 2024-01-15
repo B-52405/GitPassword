@@ -17,7 +17,7 @@
     "help": [
         "    Usage:",
         "        --- BEFORE LOGIN ---",
-        "        init    -    Initialize to create a github repository as a vault or connect to an existing vault.",
+        "        init    -    Initialize a vault or connect to an existing vault.",
         "        login   -    You can only login after initialization.",
         " ",
         "        --- AFTER LOGIN ---",
@@ -25,8 +25,7 @@
         "        add     -    Create a new password record.",
         "        delete <NAME>    -    Delete a record.",
         "        search <NAME>    -    search using a record name or a portion of the name.",
-        "        exit    -    Log out.",
-        " "
+        "        exit    -    Log out."
     ],
     "init_done": [
         "    All done. Login and enjoy GitPassword."

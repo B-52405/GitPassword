@@ -26,58 +26,64 @@ createApp({
             log_lines: [],
             log_interval: 24,
             is_logging: false,
+            log_level: {
+                LOG: "log",
+                WARNING: "warning",
+                DATA: "data"
+            },
+            blank_line: 4,
             code_completion_array: [],
             code_completion_index: -1,
             command_states: {
-                LOGOUT: { 
-                    id: "logout", 
+                LOGOUT: {
+                    id: "logout",
                     handler: undefined,
                     visible: true,
                     record: true,
                 },
-                LOGIN: { 
-                    id: "login", 
+                LOGIN: {
+                    id: "login",
                     handler: undefined,
                     visible: true,
                     record: true
                 },
-                SET_MAIN_PASSWORD: { 
-                    id:"set_main_password", 
+                SET_MAIN_PASSWORD: {
+                    id: "set_main_password",
                     handler: undefined,
-                    header:"main password: ",
-                    visible: false,
-                    record: false
-                }, 
-                MAIN_PASSWORd: {
-                    id: "main_password", 
-                    handler: undefined,
-                    header:"main password: ", 
+                    header: "main password: ",
                     visible: false,
                     record: false
                 },
-                TOKEN: { 
-                    id: "token", 
+                MAIN_PASSWORd: {
+                    id: "main_password",
+                    handler: undefined,
+                    header: "main password: ",
+                    visible: false,
+                    record: false
+                },
+                TOKEN: {
+                    id: "token",
                     handler: undefined,
                     header: "token: ",
                     visible: false,
                     record: false
                 },
-                NAME: { 
-                    id: "name", 
+                NAME: {
+                    id: "name",
                     handler: undefined,
                     header: "name: ",
                     visible: true,
                     record: false
                 },
-                USERNAME: { 
-                    id: "username", 
+                USERNAME: {
+                    id: "username",
                     handler: undefined,
                     header: "username: ",
                     visible: true,
                     record: false
                 },
-                PASSWORD: { 
-                    id: "password", 
+                PASSWORD: {
+                    id: "password",
                     handler: undefined,
                     header: "password: ",
                     visible: false,
@@ -107,11 +113,13 @@ createApp({
 
             if (event.ctrlKey && (event.key === 'c' || event.key === 'C')) {
                 this.command_state = this.octokit ? this.command_states.LOGIN : this.command_states.LOGOUT
-                this.console_log(
-                    this.banner_yielder(this.command_lines.concat([" ", "    Control-C", " "]), false))
+                await this.console_log(
+                    this.banner_yielder(
+                        this.command_lines.concat([" ", "    Control-C", " "]), 
+                        this.log_level.LOG, false))
             }
             else if (event.key == "ArrowUp") {
-                if(!this.command_state.record){
+                if (!this.command_state.record) {
                     return
                 }
                 if (this.command_history_index < this.command_history.length - 1) {
@@ -120,30 +128,30 @@ createApp({
                 }
             }
             else if (event.key == "ArrowDown") {
-                if(!this.command_state.record){
+                if (!this.command_state.record) {
                     return
                 }
                 if (this.command_history_index > 0) {
                     this.command_history_index--
                     this.set_command(this.command_history[this.command_history_index])
                 }
-            }           
-            if(event.key == "Tab"){
+            }
+            if (event.key == "Tab") {
                 event.preventDefault();
-                if(!this.command_state.record){
+                if (!this.command_state.record) {
                     return
                 }
-                if(this.code_completion_index < 0){
-                    for(let id in this.commands){
-                        if(this.commands[id].startsWith(this.command.toLowerCase())){
+                if (this.code_completion_index < 0) {
+                    for (let id in this.commands) {
+                        if (this.commands[id].startsWith(this.command.toLowerCase())) {
                             this.code_completion_array.push(this.commands[id])
                         }
                     }
                 }
-                this.code_completion_index = (this.code_completion_index+1)%this.code_completion_array.length
+                this.code_completion_index = (this.code_completion_index + 1) % this.code_completion_array.length
                 this.set_command(this.code_completion_array[this.code_completion_index])
             }
-            else{
+            else {
                 this.code_completion_array = []
                 this.code_completion_index = -1
             }
@@ -151,8 +159,9 @@ createApp({
             if (event.key !== 'Enter') {
                 return
             }
-            this.log_lines = this.log_lines.concat(this.command_lines)
-            if(this.command_state.record){
+            // this.log_lines = this.log_lines.concat(this.command_lines)
+            await this.console_log(this.banner_yielder(this.command_lines, this.log_level.LOG, false))
+            if (this.command_state.record) {
                 this.command_history.unshift(this.command)
                 this.command_history_index = -1;
             }
@@ -166,18 +175,27 @@ createApp({
             this.command = ""
             this.scroll_to_bottom()
         },
-        async *banner_yielder(banner, blank_row = true) {
+        async *banner_yielder(banner, level = "log", blank_row = true) {
             if (blank_row) {
-                yield " "
+                yield {
+                    level: this.log_level.LOG,
+                    content: " "
+                }
             }
             for (let line of banner) {
-                yield line
+                yield {
+                    level: level,
+                    content: line
+                }
             }
             if (blank_row) {
-                yield " "
+                yield {
+                    level: this.log_level.LOG,
+                    content: " "
+                }
             }
         },
-        console_log(log_lines) {
+        async console_log(log_lines) {
             this.is_logging = true
             this.command_line_visibility = "hidden"
             let next_line = log_lines.next()
@@ -191,10 +209,27 @@ createApp({
                     this.scroll_to_bottom()
                     return
                 }
-                this.log_lines.push(line)
-                setTimeout(log, this.log_interval)
+                if(typeof line == "string"){
+                    this.log_lines.push({
+                        level: this.log_level.LOG,
+                        content: line
+                    })
+                }
+                else{
+                    this.log_lines.push(line)
+                }
+                this.scroll_to_bottom()
+                await new Promise((resolve)=>{
+                    setTimeout(async ()=>{
+                        await log()
+                        resolve()
+                    }, this.log_interval)
+                })
+                return new Promise((resolve) => {
+                    resolve()
+                })
             }
-            log()
+            await log()
         },
         scroll_to_bottom() {
             this.$nextTick(() => {
@@ -214,11 +249,11 @@ createApp({
             const command_line = this.$refs.command_line
             const length = command_line.value.length
             command_line.focus()
-            command_line.setSelectionRange(length,length)
+            command_line.setSelectionRange(length, length)
         },
-        set_command(command){
+        set_command(command) {
             this.command = command
-            this.$nextTick(()=>this.command_line_focus)
+            this.$nextTick(() => this.command_line_focus)
         },
         measure_string_width(str) {
             this.$refs.text_measure.textContent = str
@@ -230,10 +265,10 @@ createApp({
                 return
             }
             let command_with_header = ""
-            if(this.command_state.visible){
+            if (this.command_state.visible) {
                 command_with_header = this.command_header + this.command
             }
-            else{
+            else {
                 command_with_header = this.command_header + "*".repeat(this.command.length)
             }
             this.command_lines = []
@@ -264,45 +299,45 @@ createApp({
         },
 
         //state handler
-        state_logout_handler(command) {
+        async state_logout_handler(command) {
             if (this.command_equals(command.command, this.commands.HELP)) {
-                this.console_log(this.banner_yielder(banner["help"]))
+                await this.console_log(this.banner_yielder(banner["help"]))
             }
-            else if (this.command_equals(command.command, this.commands.INIT)){
-                this.console_log(this.banner_yielder([" "], false))
+            else if (this.command_equals(command.command, this.commands.INIT)) {
+                await this.console_log(this.banner_yielder([" "], this.log_level.LOG, false))
                 this.command_state = this.command_states.TOKEN
             }
             else if (this.command_equals(command.command, this.commands.LOGIN)) {
-                this.console_log(this.banner_yielder([" "], false))
+                await this.console_log(this.banner_yielder([" "], this.log_level.LOG, false))
                 this.command_state = this.command_states.MAIN_PASSWORd
             }
             else {
-                this.console_log(this.banner_yielder(banner["warning"]))
+                await this.console_log(this.banner_yielder(banner["warning"], this.log_level.WARNING))
             }
         },
-        state_token_handler(command) {
+        async state_token_handler(command) {
             if (!this.assert_param_count(command.param_count, 0)) {
                 return
             }
             else {
                 this.token = command.command
                 this.octokit = new Octokit({ auth: this.token })
-                this.console_log((async function* (app) {
+                await this.console_log((async function* (app) {
                     yield " "
                     yield "    Authenticating ..."
-                    try{
+                    try {
                         const login_response = await app.octokit.rest.users.getAuthenticated()
                         app.owner = login_response.data.login
-                    }catch(error){
+                    } catch (error) {
                         app.token = ""
                         app.octokit = undefined
                         yield "    Token incorrect."
                         yield " "
                         return
-                    }                   
+                    }
                     yield "    Authentication succeeded."
                     yield "    Creating repository ..."
-                    try{
+                    try {
                         await app.octokit.rest.repos.createForAuthenticatedUser({
                             name: "GitPasswordVault",
                             description: 'A vault of passwords by GitPassword',
@@ -313,7 +348,7 @@ createApp({
                             repo: app.repo,
                             path: app.path,
                             message: "Create PasswordVault",
-                            content: btoa(encrypt("{}",app.token)),
+                            content: btoa(encrypt("{}", app.token)),
                         })
                         await app.octokit.rest.repos.createOrUpdateFileContents({
                             owner: app.owner,
@@ -323,7 +358,7 @@ createApp({
                             content: btoa(await fetch("./static/README.md")
                                 .then(response => response.text()))
                         })
-                    }catch(error){
+                    } catch (error) {
                         yield "    Repository already exists."
                         yield "    Checking data ..."
                         const data_response = await app.octokit.rest.repos.getContent({
@@ -331,8 +366,8 @@ createApp({
                             repo: app.repo,
                             path: app.path
                         })
-                        const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.token)
-                        if(!success){
+                        const { success, decrypted_text } = decrypt(atob(data_response.data.content), app.token)
+                        if (!success) {
                             app.token = ""
                             app.owner = "unknown"
                             app.octokit = undefined
@@ -348,7 +383,7 @@ createApp({
                 })(this))
             }
         },
-        state_set_main_password_handler(command){
+        async state_set_main_password_handler(command) {
             if (!this.assert_param_count(command.param_count, 0)) {
                 return
             }
@@ -361,23 +396,24 @@ createApp({
             this.owner = "unknown"
             this.octokit = undefined
 
-            this.console_log(this.banner_yielder(banner["init_done"]))
+            await this.console_log(this.banner_yielder(banner["init_done"]))
             this.command_state = this.command_states.LOGOUT
         },
-        state_main_password_handler(command){
+        async state_main_password_handler(command) {
             if (!this.assert_param_count(command.param_count, 0)) {
                 return
             }
-            const { success, decrypted_text } = decrypt(Cookies.get("userinfo"),command.command)
-            if(!success){
-                this.console_log(this.banner_yielder(banner["warning_main_password_incorrect"]))
+            const { success, decrypted_text } = decrypt(Cookies.get("userinfo"), command.command)
+            if (!success) {
+                await this.console_log(
+                    this.banner_yielder(banner["warning_main_password_incorrect"], this.log_level.WARNING))
                 this.command_state = this.command_states.LOGOUT
                 return
             }
             const userinfo = JSON.parse(decrypted_text)
             this.token = userinfo.token
             this.octokit = new Octokit({ auth: this.token })
-            this.console_log((async function* (app) {
+            await this.console_log((async function* (app) {
                 yield " "
                 yield "    Logging in ..."
                 const login_response = await app.octokit.rest.users.getAuthenticated()
@@ -389,8 +425,8 @@ createApp({
                     repo: app.repo,
                     path: app.path
                 })
-                const {success, decrypted_text} = decrypt(atob(data_response.data.content), app.token)
-                if(!success){
+                const { success, decrypted_text } = decrypt(atob(data_response.data.content), app.token)
+                if (!success) {
                     yield "    Error: Data corruption."
                     yield "    Please reinitialize, all data will NOT be retained."
                     yield " "
@@ -404,29 +440,30 @@ createApp({
                 yield " "
             })(this))
         },
-        state_login_handler(command) {
+        async state_login_handler(command) {
             if (this.command_equals(command.command, this.commands.HELP)) {
-                this.console_log(this.banner_yielder(banner["help"]))
+                await this.console_log(this.banner_yielder(banner["help"]))
             }
             else if (this.command_equals(command.command, this.commands.EXIT)) {
                 location.reload()
             }
             else if (this.command_equals(command.command, this.commands.ALL)) {
-                this.console_log(this.banner_yielder(this.search_password(() => true)), false)
+                await this.console_log(
+                    this.banner_yielder(this.search_password(() => true), this.log_level.DATA))
             }
             else if (this.command_equals(command.command, this.commands.SEARCH)) {
                 if (!this.assert_param_count(command.param_count, 1)) {
                     return
                 }
-                this.console_log(this.banner_yielder(this.search_password((password) => {
+                await this.console_log(this.banner_yielder(this.search_password((password) => {
                     return password.name.toLowerCase().includes(command.params[0].toLowerCase())
-                })))
+                }), this.log_level.DATA))
             }
             else if (this.command_equals(command.command, this.commands.ADD)) {
                 if (!this.assert_param_count(command.param_count, 0)) {
                     return
                 }
-                this.console_log(this.banner_yielder([" "], false))
+                await this.console_log(this.banner_yielder([" "], false))
                 this.command_state = this.command_states.NAME
             } else if (this.command_equals(command.command, this.commands.DELETE)) {
                 if (!this.assert_param_count(command.param_count, 1)) {
@@ -434,14 +471,15 @@ createApp({
                 }
                 const name = command.params[0]
                 if (!(name in this.password_data)) {
-                    this.console_log(this.banner_yielder(banner["warning_no_such_password"]))
+                    await this.console_log(
+                        this.banner_yielder(banner["warning_no_such_password"], this.log_level.WARNING))
                     return
                 }
                 delete this.password_data[name]
                 this.update_remote_repo()
             }
             else {
-                this.console_log(this.banner_yielder(banner["warning"]))
+                await this.console_log(this.banner_yielder(banner["warning"], this.log_level.WARNING))
             }
         },
         state_name_handler(command) {
@@ -468,9 +506,10 @@ createApp({
             this.command_state = this.command_states.LOGIN
         },
 
-        assert_param_count(param_count, number) {
+        async assert_param_count(param_count, number) {
             if (param_count != number) {
-                this.console_log(this.banner_yielder(banner["warning_incorrect_parameter_number"]))
+                await this.console_log(
+                    this.banner_yielder(banner["warning_incorrect_parameter_number"], this.log_level.WARNING))
                 return false
             }
             return true
@@ -478,8 +517,8 @@ createApp({
         command_equals(command, COMMAND) {
             return command.toLowerCase() == COMMAND
         },
-        update_remote_repo() {
-            this.console_log((async function* (app) {
+        async update_remote_repo() {
+            await this.console_log((async function* (app) {
                 yield " "
                 yield "    Updating remote repository ..."
                 await app.octokit.rest.repos.createOrUpdateFileContents({
@@ -514,16 +553,11 @@ createApp({
                     passwords.push(password)
                 }
             }
-            if(passwords.length == 0){
+            if (passwords.length == 0) {
                 return ["    No records."]
             }
             return passwords
         }
-
-        //test
-    },
-    computed: {
-
     },
     watch: {
         command(command, old_command) {
@@ -550,11 +584,8 @@ createApp({
         }
 
         this.$refs.console_window.style.visibility = "visible"
-        this.console_log(this.banner_yielder(banner["banner"], false))
+        this.console_log(this.banner_yielder(banner["banner"], this.log_level.LOG, false))
         this.command_state = this.command_states.LOGOUT
         this.command_line_focus()
-
-        //test
-        window.data = this
     }
 }).mount("#app")

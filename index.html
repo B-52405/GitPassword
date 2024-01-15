@@ -16,14 +16,17 @@
     <div id="app">
         <div id="console_window" ref="console_window" class="command_font">
             <div v-for="line in log_lines">
-                <div v-if="typeof line == 'string'">
-                    <p>{{line}}</p>
+                <div v-if="line.level == log_level.LOG">
+                    <p>{{line.content}}</p>
                 </div>
-                <div v-else>
-                    <p>{{"    name: " + line.name + "; username: " + line.username + " "}}</p>
-                    <p @click="copy(line.username)">[COPY]</p>
-                    <p>{{"; password: " + line.hidden_password + " "}}</p>
-                    <p @click="copy(line.password)">[COPY]</p>
+                <div v-else-if="line.level == log_level.WARNING">
+                    <p class = "warning">{{ line.content }}</p>
+                </div>
+                <div v-else-if="line.level == log_level.DATA">
+                    <p>{{"    name: " + line.content.name + "; username: " + line.content.username + " "}}</p>
+                    <p class="button" @click="copy(line.content.username)">[COPY]</p>
+                    <p>{{"; password: " + line.content.hidden_password + " "}}</p>
+                    <p class="button" @click="copy(line.content.password)">[COPY]</p>
                     <p>.</p>
                 </div>
             </div>
@@ -31,6 +34,7 @@
                 v-bind:class="{ 'blinking-cursor': index == command_lines.length - 1}">
                 {{line}}
             </div>
+            <div v-for="space in ' '.repeat(blank_line)">{{" "}}</div>
             <div id="copy_button"></div>
             <div id="text_measure" ref="text_measure"></div>
             <input id="command_line" type="text" v-model="command" ref="command_line">

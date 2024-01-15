@@ -12,6 +12,14 @@ p {
     white-space: pre;
 }
 
+.warning {
+    color: red;
+}
+
+.button {
+    color: chartreuse;
+}
+
 .command_font {
     font-family: 'Courier New', monospace;
     font-size: large;
@@ -29,12 +37,11 @@ p {
     white-space: pre;
     user-select: text;
     visibility: hidden;
+    padding: 24px;
 }
 
 #text_measure {
     position: absolute;
-    /* top: -9999px;
-    left: -9999px; */
     visibility: hidden;
     white-space: nowrap;
 }
