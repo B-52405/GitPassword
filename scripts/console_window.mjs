@@ -1,5 +1,6 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
 import { Octokit } from 'https://esm.sh/octokit'
+import { pinyin } from 'https://cdn.jsdelivr.net/npm/pinyin@4.0.0-alpha.0/+esm' 
 import { Command } from './command_parser.mjs'
 import { encrypt, decrypt } from './crypter.mjs'
 
@@ -98,7 +99,8 @@ createApp({
                 ADD: "add",
                 ALL: "all",
                 DELETE: "delete",
-                SEARCH: "search"
+                SEARCH: "search",
+                START: "start"
             },
             new_password: {
                 name: undefined,
@@ -159,7 +161,6 @@ createApp({
             if (event.key !== 'Enter') {
                 return
             }
-            // this.log_lines = this.log_lines.concat(this.command_lines)
             await this.console_log(this.banner_yielder(this.command_lines, this.log_level.LOG, false))
             if (this.command_state.record) {
                 this.command_history.unshift(this.command)
@@ -182,10 +183,18 @@ createApp({
                     content: " "
                 }
             }
-            for (let line of banner) {
+            if(typeof banner == "string"){
                 yield {
-                    level: level,
-                    content: line
+                    level: this.log_level.LOG,
+                    content: banner
+                }
+            }
+            else {
+                for (let line of banner) {
+                    yield {
+                        level: level,
+                        content: line
+                    }
                 }
             }
             if (blank_row) {
@@ -316,7 +325,7 @@ createApp({
             }
         },
         async state_token_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             else {
@@ -384,7 +393,7 @@ createApp({
             }
         },
         async state_set_main_password_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             const userinfo = {
@@ -400,7 +409,7 @@ createApp({
             this.command_state = this.command_states.LOGOUT
         },
         async state_main_password_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             const { success, decrypted_text } = decrypt(Cookies.get("userinfo"), command.command)
@@ -452,21 +461,39 @@ createApp({
                     this.banner_yielder(this.search_password(() => true), this.log_level.DATA))
             }
             else if (this.command_equals(command.command, this.commands.SEARCH)) {
-                if (!this.assert_param_count(command.param_count, 1)) {
+                if (!await this.assert_param_count(command.param_count, 1)) {
                     return
                 }
                 await this.console_log(this.banner_yielder(this.search_password((password) => {
                     return password.name.toLowerCase().includes(command.params[0].toLowerCase())
                 }), this.log_level.DATA))
             }
+            else if (this.command_equals(command.command, this.commands.START)){
+                if (!await this.assert_param_count(command.param_count, 1)) {
+                    return
+                }
+                if (!await this.assert_param_format(command.params, (params)=>{
+                    return params.length == 1 
+                        && params[0].length == 1
+                        && /^[a-zA-Z]$/.test(params[0]) 
+                })) {
+                    return
+                }
+                await this.console_log(this.banner_yielder(this.search_password((password) => {
+                    console.log(pinyin(password.name,{style: "first_letter"})[0][0][0].toLowerCase())
+                    console.log(command.params[0].toLowerCase()[0])
+                    return pinyin(password.name,{style: "first_letter"})[0][0].toLowerCase()
+                        == command.params[0].toLowerCase()[0]
+                }), this.log_level.DATA))
+            }
             else if (this.command_equals(command.command, this.commands.ADD)) {
-                if (!this.assert_param_count(command.param_count, 0)) {
+                if (!await this.assert_param_count(command.param_count, 0)) {
                     return
                 }
                 await this.console_log(this.banner_yielder([" "], false))
                 this.command_state = this.command_states.NAME
             } else if (this.command_equals(command.command, this.commands.DELETE)) {
-                if (!this.assert_param_count(command.param_count, 1)) {
+                if (!await this.assert_param_count(command.param_count, 1)) {
                     return
                 }
                 const name = command.params[0]
@@ -482,22 +509,22 @@ createApp({
                 await this.console_log(this.banner_yielder(banner["warning"], this.log_level.WARNING))
             }
         },
-        state_name_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+        async state_name_handler(command) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             this.new_password.name = command.command
             this.command_state = this.command_states.USERNAME
         },
-        state_username_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+        async state_username_handler(command) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             this.new_password.username = command.command
             this.command_state = this.command_states.PASSWORD
         },
-        state_password_handler(command) {
-            if (!this.assert_param_count(command.param_count, 0)) {
+        async state_password_handler(command) {
+            if (!await this.assert_param_count(command.param_count, 0)) {
                 return
             }
             this.new_password.password = command.command
@@ -510,6 +537,14 @@ createApp({
             if (param_count != number) {
                 await this.console_log(
                     this.banner_yielder(banner["warning_incorrect_parameter_number"], this.log_level.WARNING))
+                return false
+            }
+            return true
+        },
+        async assert_param_format(params, format_checker){
+            if(!format_checker(params)){
+                await this.console_log(
+                    this.banner_yielder(banner["warning_incorrect_param_format"], this.log_level.WARNING))
                 return false
             }
             return true
@@ -554,7 +589,7 @@ createApp({
                 }
             }
             if (passwords.length == 0) {
-                return ["    No records."]
+                return "    No records."
             }
             return passwords
         }
@@ -587,5 +622,8 @@ createApp({
         this.console_log(this.banner_yielder(banner["banner"], this.log_level.LOG, false))
         this.command_state = this.command_states.LOGOUT
         this.command_line_focus()
+
+        //test
+        window.data = this
     }
 }).mount("#app")

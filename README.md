@@ -5,4 +5,9 @@
 使用方式：
 
 1. 生成Github Token： https://github.com/settings/tokens
+
+    1. 建议使用Token(classic)
+    2. 勾选repos选项(必要)
+    3. 强烈建议使用无使用期限的token
+
 2. 登陆网页：https://b-52405.github.io/GitPassword/

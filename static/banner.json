@@ -37,6 +37,9 @@
     "warning_incorrect_parameter_number": [
         "    Warning: Incorrect number of parameters."
     ],
+    "warning_incorrect_param_format": [
+        "    Warning: Incorrect parameter format."
+    ],
     "warning_no_such_password": [
         "    Warning: No such password."
     ],
