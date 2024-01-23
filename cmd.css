@@ -18,6 +18,7 @@ p {
 
 .button {
     color: chartreuse;
+    cursor: pointer;
 }
 
 .command_font {

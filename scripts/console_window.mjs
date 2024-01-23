@@ -32,7 +32,7 @@ createApp({
                 WARNING: "warning",
                 DATA: "data"
             },
-            blank_line: 4,
+            blank_line: 2,
             code_completion_array: [],
             code_completion_index: -1,
             command_states: {
@@ -107,10 +107,19 @@ createApp({
                 username: undefined,
                 password: undefined
             },
+            logout_interval: undefined,
+            logout_timeout: 300000
         }
     },
     methods: {
         async handle_key_down(event) {
+            if(this.log_interval!=undefined){
+                clearInterval(this.logout_interval)
+                this.logout_interval = setInterval(()=>{
+                    location.reload()
+                }, this.logout_timeout)
+            }
+
             this.command_line_focus()
 
             if (event.ctrlKey && (event.key === 'c' || event.key === 'C')) {
@@ -400,7 +409,7 @@ createApp({
                 token: this.token
             }
             const encrypted_userinfo = encrypt(JSON.stringify(userinfo), command.command)
-            Cookies.set("userinfo", encrypted_userinfo, { expires: Infinity })
+            Cookies.set("userinfo", encrypted_userinfo, { expires: 365 })
             this.token = ""
             this.owner = "unknown"
             this.octokit = undefined
@@ -622,6 +631,10 @@ createApp({
         this.console_log(this.banner_yielder(banner["banner"], this.log_level.LOG, false))
         this.command_state = this.command_states.LOGOUT
         this.command_line_focus()
+
+        this.logout_interval = setInterval(()=>{
+            location.reload()
+        }, this.logout_timeout)
 
         //test
         window.data = this
