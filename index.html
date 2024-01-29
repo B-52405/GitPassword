@@ -24,12 +24,17 @@
                     <p class = "warning">{{ line.content }}</p>
                 </div>
                 <div v-else-if="line.level == log_level.DATA">
-                    <p>{{"    name: " + line.content.name}}</p>
+                    <p>{{"    name: " + line.content.name + " "}}</p>
                     <p class="button" @click="copy(line.content.name)">[COPY]</p>
                     <p>{{"; username: " + line.content.username + " "}}</p>
                     <p class="button" @click="copy(line.content.username)">[COPY]</p>
                     <p>{{"; password: " + line.content.hidden_password + " "}}</p>
                     <p class="button" @click="copy(line.content.password)">[COPY]</p>
+                    <p>.</p>
+                </div>
+                <div v-else-if="line.level == log_level.RANDOM">
+                    <p>{{"    random password: " + line.content + " "}}</p>
+                    <p class="button" @click="copy(line.content)">[COPY]</p>
                     <p>.</p>
                 </div>
             </div>

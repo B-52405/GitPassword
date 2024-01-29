@@ -1,8 +1,7 @@
 import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js'
 import { Octokit } from 'https://esm.sh/octokit'
 import { pinyin } from 'https://cdn.jsdelivr.net/npm/pinyin@4.0.0-alpha.0/+esm' 
-import { Command } from './command_parser.mjs'
-import { encrypt, decrypt } from './crypter.mjs'
+import { generate_random_password, Command, encrypt, decrypt } from './util.mjs'
 
 const banner = await fetch("./static/banner.json")
     .then(response => response.json())
@@ -30,7 +29,8 @@ createApp({
             log_level: {
                 LOG: "log",
                 WARNING: "warning",
-                DATA: "data"
+                DATA: "data",
+                RANDOM: "random"
             },
             blank_line: 2,
             code_completion_array: [],
@@ -100,7 +100,8 @@ createApp({
                 ALL: "all",
                 DELETE: "delete",
                 SEARCH: "search",
-                START: "start"
+                START: "start",
+                RANDOM: "random"
             },
             new_password: {
                 name: undefined,
@@ -108,7 +109,8 @@ createApp({
                 password: undefined
             },
             logout_interval: undefined,
-            logout_timeout: 300000
+            logout_timeout: 300000,
+            password_length: 12
         }
     },
     methods: {
@@ -295,7 +297,7 @@ createApp({
             for (let i in command_with_header) {
                 const char_width = this.measure_string_width(command_with_header[i])
                 width += char_width
-                if (width > console_window.offsetWidth) {
+                if (width > console_window.offsetWidth - 48) {
                     this.command_lines.push(command_with_header.slice(line_index, i))
                     line_index = i
                     width = 0
@@ -499,7 +501,7 @@ createApp({
                 if (!await this.assert_param_count(command.param_count, 0)) {
                     return
                 }
-                await this.console_log(this.banner_yielder([" "], false))
+                await this.console_log(this.banner_yielder([" "], this.log_level.LOG, false))
                 this.command_state = this.command_states.NAME
             } else if (this.command_equals(command.command, this.commands.DELETE)) {
                 if (!await this.assert_param_count(command.param_count, 1)) {
@@ -513,6 +515,26 @@ createApp({
                 }
                 delete this.password_data[name]
                 this.update_remote_repo()
+            }
+            else if(this.command_equals(command.command, this.commands.RANDOM)){
+                if(!await this.assert_param_format(command.params, (params)=>{
+                    if(params.length > 1){
+                        return false
+                    }
+                    if(params.length == 1){
+                        return /^\d+$/.test(params[0]) && parseInt(params[0]) >= 4
+                    }
+                    return true
+                })){
+                    return
+                }
+                let password_length = this.password_length
+                if(command.param_count != 0){
+                    password_length = parseInt(command.params[0])
+                }
+                const random_password = generate_random_password(password_length)
+                await this.console_log(this.banner_yielder([random_password], this.log_level.RANDOM))
+                return
             }
             else {
                 await this.console_log(this.banner_yielder(banner["warning"], this.log_level.WARNING))
