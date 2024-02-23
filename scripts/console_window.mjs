@@ -491,10 +491,8 @@ createApp({
                     return
                 }
                 await this.console_log(this.banner_yielder(this.search_password((password) => {
-                    console.log(pinyin(password.name,{style: "first_letter"})[0][0][0].toLowerCase())
-                    console.log(command.params[0].toLowerCase()[0])
-                    return pinyin(password.name,{style: "first_letter"})[0][0].toLowerCase()
-                        == command.params[0].toLowerCase()[0]
+                    return pinyin(password.name,{style: "first_letter"})[0][0][0].toLowerCase()
+                        == command.params[0][0].toLowerCase()
                 }), this.log_level.DATA))
             }
             else if (this.command_equals(command.command, this.commands.ADD)) {
@@ -659,6 +657,6 @@ createApp({
         }, this.logout_timeout)
 
         //test
-        window.data = this
+        // window.data = this
     }
 }).mount("#app")
